@@ -42,7 +42,7 @@ jobs:
         with:
           # ¬казуЇмо шл€х, куди Doxygen згенерував HTML (маЇ сп≥впадати з OUTPUT_DIRECTORY в Doxyfile + /html)
           # якщо в Doxyfile ви не м≥н€ли output, то за замовчуванн€м це 'html' або 'docs/html'
-          path: 'lab_1/html'
+          path: 'lab_1/docs/html'
 
       - name: Deploy to GitHub Pages
         id: deployment
