@@ -6,16 +6,30 @@
 #include <vector>
 #include <memory>
 
+/**
+ * @brief Base class for player characters with inventory management
+ */
 class Player : public Character {
 protected:
-    std::vector<Item*> inventory_;
+    std::vector<Item*> inventory_;  ///< Player inventory
 
 public:
+    /**
+     * @brief Construct a new Player
+     * @param name Player name
+     * @param max_hp Maximum health points
+     * @param attack_power Attack damage value
+     * @param defense Defense value
+     */
     Player(const std::string& name, int max_hp, int attack_power, int defense)
         : Character(name, max_hp, attack_power, defense) {}
 
     virtual ~Player() = default;
 
+    /**
+     * @brief Add item to inventory
+     * @param item Pointer to item to add
+     */
     void add_item(Item* item) {
         if (item != nullptr) {
             inventory_.push_back(item);
@@ -23,6 +37,9 @@ public:
         }
     }
 
+    /**
+     * @brief Display inventory contents
+     */
     void show_inventory() const {
         std::cout << "\n=== Інвентар: " << name_ << " ===" << std::endl;
         if (inventory_.empty()) {
@@ -35,6 +52,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get item at index
+     * @param index Inventory index
+     * @return Pointer to item or nullptr if invalid index
+     */
     Item* get_item(size_t index) {
         if (index < inventory_.size()) {
             return inventory_[index];
@@ -42,12 +64,20 @@ public:
         return nullptr;
     }
 
+    /**
+     * @brief Remove item from inventory
+     * @param index Inventory index
+     */
     void remove_item(size_t index) {
         if (index < inventory_.size()) {
             inventory_.erase(inventory_.begin() + index);
         }
     }
 
+    /**
+     * @brief Get inventory size
+     * @return Number of items in inventory
+     */
     size_t inventory_size() const {
         return inventory_.size();
     }

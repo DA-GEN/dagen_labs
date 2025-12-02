@@ -19,15 +19,19 @@
 #include <random>
 #include <sstream>
 
+/**
+ * @brief Manages the dungeon map with procedural generation
+ */
 class GameMap {
 private:
-    Graph<MapNode*> graph_;
-    std::vector<std::unique_ptr<MapNode>> nodes_;
-    std::vector<std::unique_ptr<Enemy>> enemies_;
-    std::vector<std::unique_ptr<Item>> items_;
+    Graph<MapNode*> graph_;                          ///< Graph structure for room connections
+    std::vector<std::unique_ptr<MapNode>> nodes_;    ///< All map nodes
+    std::vector<std::unique_ptr<Enemy>> enemies_;    ///< All enemies
+    std::vector<std::unique_ptr<Item>> items_;       ///< All items
     
-    static bool random_initialized_;
+    static bool random_initialized_;  ///< Random initialization flag
 
+    /** @brief Initialize random number generator */
     void init_random() {
         if (!random_initialized_) {
             std::srand(static_cast<unsigned>(std::time(nullptr)));
@@ -35,6 +39,10 @@ private:
         }
     }
 
+    /**
+     * @brief Generate random room description
+     * @return Room description string
+     */
     std::string generate_room_description(int /* id */) {
         const std::vector<std::string> room_types = {
             "Темний коридор",
@@ -71,6 +79,10 @@ private:
         return desc.str();
     }
 
+    /**
+     * @brief Create random enemy
+     * @return Unique pointer to enemy
+     */
     std::unique_ptr<Enemy> create_random_enemy() {
         int type = std::rand() % 3;
         
@@ -86,6 +98,10 @@ private:
         }
     }
 
+    /**
+     * @brief Create random item
+     * @return Unique pointer to item
+     */
     std::unique_ptr<Item> create_random_item() {
         int type = std::rand() % 3;
         
@@ -121,12 +137,21 @@ private:
     }
 
 public:
+    /**
+     * @brief Construct a new GameMap
+     */
     GameMap() {
         init_random();
     }
 
     ~GameMap() = default;
 
+    /**
+     * @brief Generate procedural dungeon map
+     * @param num_rooms Number of rooms to generate
+     * @param num_enemies Number of enemies to place
+     * @param num_items Number of items to place
+     */
     void generate_map(int num_rooms, int num_enemies, int num_items) {
         nodes_.clear();
         enemies_.clear();
@@ -180,6 +205,9 @@ public:
         }
     }
 
+    /**
+     * @brief Print entire map to console
+     */
     void print_map() const {
         std::cout << "\n╔════════════════════════════════════════════════════╗" << std::endl;
         std::cout << "║           КАРТА ПІДЗЕМЕЛЛЯ                         ║" << std::endl;
@@ -210,6 +238,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get node by ID
+     * @param id Room ID
+     * @return Pointer to MapNode or nullptr
+     */
     MapNode* get_node_by_id(int id) {
         if (id >= 0 && id < static_cast<int>(nodes_.size())) {
             return nodes_[id].get();
@@ -217,6 +250,12 @@ public:
         return nullptr;
     }
 
+    /**
+     * @brief Find path between two rooms
+     * @param start_id Start room ID
+     * @param end_id End room ID
+     * @return Path as vector of MapNode pointers
+     */
     std::vector<MapNode*> find_path(int start_id, int end_id) {
         MapNode* start = get_node_by_id(start_id);
         MapNode* end = get_node_by_id(end_id);
@@ -228,6 +267,11 @@ public:
         return graph_.bfs(start, end);
     }
 
+    /**
+     * @brief Get neighboring rooms
+     * @param id Room ID
+     * @return Vector of neighboring MapNode pointers
+     */
     std::vector<MapNode*> get_neighbors(int id) {
         MapNode* node = get_node_by_id(id);
         if (!node) {
@@ -237,10 +281,18 @@ public:
         return graph_.get_neighbors(node);
     }
 
+    /**
+     * @brief Get total number of rooms
+     * @return Room count
+     */
     size_t get_num_rooms() const {
         return nodes_.size();
     }
 
+    /**
+     * @brief Display detailed room information
+     * @param id Room ID
+     */
     void display_room_details(int id) const {
         if (id < 0 || id >= static_cast<int>(nodes_.size())) {
             std::cout << "Невірний номер кімнати!" << std::endl;

@@ -3,8 +3,15 @@
 
 #include "Enemy.hpp"
 
+/**
+ * @brief Orc enemy - strong enemy with 110% damage modifier
+ */
 class Orc : public Enemy {
 public:
+    /**
+     * @brief Construct a new Orc
+     * @param name Orc name (default: "Orc")
+     */
     Orc(const std::string& name = "Orc")
         : Enemy(name, 100, 20, 10) {}
 

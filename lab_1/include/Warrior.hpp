@@ -3,8 +3,15 @@
 
 #include "Player.hpp"
 
+/**
+ * @brief Warrior class with high HP and 120% damage modifier
+ */
 class Warrior : public Player {
 public:
+    /**
+     * @brief Construct a new Warrior
+     * @param name Warrior name
+     */
     Warrior(const std::string& name)
         : Player(name, 150, 25, 12) {}
 

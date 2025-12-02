@@ -5,14 +5,24 @@
 #include "Character.hpp"
 #include <iostream>
 
+/**
+ * @brief Weapon item that increases attack power
+ */
 class Weapon : public Item {
 private:
-    int damage_;
+    int damage_;  ///< Weapon damage value
 
 public:
+    /**
+     * @brief Construct a new Weapon
+     * @param name Weapon name
+     * @param description Weapon description
+     * @param damage Weapon damage value
+     */
     Weapon(const std::string& name, const std::string& description, int damage)
         : Item(name, description), damage_(damage) {}
 
+    /** @brief Get weapon damage */
     int get_damage() const { return damage_; }
 
     void use(Character* character) override {
