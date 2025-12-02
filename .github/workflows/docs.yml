@@ -31,6 +31,7 @@ jobs:
         run: sudo apt-get install -y doxygen
 
       - name: Generate Documentation
+        working-directory: ./lab_1
         run: doxygen Doxyfile
 
       - name: Setup Pages
@@ -41,7 +42,7 @@ jobs:
         with:
           # ¬казуЇмо шл€х, куди Doxygen згенерував HTML (маЇ сп≥впадати з OUTPUT_DIRECTORY в Doxyfile + /html)
           # якщо в Doxyfile ви не м≥н€ли output, то за замовчуванн€м це 'html' або 'docs/html'
-          path: 'html' 
+          path: 'lab_1/html'
 
       - name: Deploy to GitHub Pages
         id: deployment
