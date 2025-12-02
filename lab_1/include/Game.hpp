@@ -11,20 +11,29 @@
 #include <string>
 #include <limits>
 
+/**
+ * @brief Main game controller managing game loop and state
+ */
 class Game {
 private:
-    std::unique_ptr<GameMap> dungeon_;
-    std::unique_ptr<Player> player_;
-    int current_room_id_;
-    bool game_running_;
-    bool game_won_;
-    int final_room_id_;
+    std::unique_ptr<GameMap> dungeon_;   ///< Dungeon map
+    std::unique_ptr<Player> player_;     ///< Player character
+    int current_room_id_;                ///< Current room ID
+    bool game_running_;                  ///< Game running flag
+    bool game_won_;                      ///< Victory flag
+    int final_room_id_;                  ///< Exit room ID
 
+    /** @brief Clear input buffer */
     void clear_input() {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
+    /**
+     * @brief Get validated integer input
+     * @param prompt Input prompt
+     * @return Integer value
+     */
     int get_int_input(const std::string& prompt) {
         int value;
         while (true) {
@@ -38,6 +47,7 @@ private:
         }
     }
 
+    /** @brief Display welcome screen */
     void display_welcome() {
         std::cout << "\n";
         std::cout << "╔═══════════════════════════════════════════════════════════╗\n";
@@ -51,6 +61,7 @@ private:
         std::cout << std::endl;
     }
 
+    /** @brief Create player character with class selection */
     void create_player() {
         std::cout << "Оберіть клас персонажа:\n";
         std::cout << "1. Воїн (Високе HP, Сильний захист)\n";
@@ -86,6 +97,7 @@ private:
         player_->display_stats();
     }
 
+    /** @brief Generate procedural dungeon */
     void generate_dungeon() {
         std::cout << "\nГенерація підземелля...\n";
         
@@ -102,6 +114,7 @@ private:
                   << num_enemies << " ворогів, " << num_items << " предметів\n";
     }
 
+    /** @brief Display current room information */
     void display_current_room() {
         std::cout << "\n" << std::string(60, '-') << "\n";
         dungeon_->display_room_details(current_room_id_);
@@ -111,6 +124,7 @@ private:
         }
     }
 
+    /** @brief Handle combat encounter */
     void handle_combat() {
         MapNode* room = dungeon_->get_node_by_id(current_room_id_);
         if (!room || !room->has_enemy()) {
@@ -150,6 +164,7 @@ private:
         }
     }
 
+    /** @brief Handle item discovery */
     void handle_item() {
         MapNode* room = dungeon_->get_node_by_id(current_room_id_);
         if (!room || !room->has_item()) {
@@ -177,6 +192,7 @@ private:
         }
     }
 
+    /** @brief Display available player actions */
     void display_actions() {
         std::cout << "\n╔═══════════════════════════════════════════════════════╗\n";
         std::cout << "║                    ДОСТУПНІ ДІЇ                       ║\n";
@@ -193,6 +209,7 @@ private:
         std::cout << "0. Вийти з гри\n";
     }
 
+    /** @brief Handle room movement */
     void move_to_room() {
         auto neighbors = dungeon_->get_neighbors(current_room_id_);
         
@@ -217,6 +234,7 @@ private:
         }
     }
 
+    /** @brief Use item from inventory */
     void use_inventory_item() {
         if (player_->inventory_size() == 0) {
             std::cout << "Ваш інвентар порожній!\n";
@@ -239,6 +257,7 @@ private:
         }
     }
 
+    /** @brief Process player action input */
     void process_action() {
         display_actions();
         
@@ -281,8 +300,14 @@ private:
     }
 
 public:
+    /**
+     * @brief Construct a new Game
+     */
     Game() : current_room_id_(0), game_running_(false), game_won_(false), final_room_id_(0) {}
 
+    /**
+     * @brief Initialize game (player creation, dungeon generation)
+     */
     void initialize() {
         try {
             display_welcome();
@@ -303,6 +328,9 @@ public:
         }
     }
 
+    /**
+     * @brief Main game loop
+     */
     void game_loop() {
         try {
             while (game_running_ && player_->is_alive()) {
@@ -334,6 +362,9 @@ public:
         }
     }
 
+    /**
+     * @brief Display game over screen with results
+     */
     void display_game_over() {
         std::cout << "\n\n";
         std::cout << "╔═══════════════════════════════════════════════════════════╗\n";

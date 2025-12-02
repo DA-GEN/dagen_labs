@@ -5,14 +5,24 @@
 #include "Character.hpp"
 #include <iostream>
 
+/**
+ * @brief Armor item that increases defense
+ */
 class Armor : public Item {
 private:
-    int defense_;
+    int defense_;  ///< Armor defense value
 
 public:
+    /**
+     * @brief Construct a new Armor
+     * @param name Armor name
+     * @param description Armor description
+     * @param defense Armor defense value
+     */
     Armor(const std::string& name, const std::string& description, int defense)
         : Item(name, description), defense_(defense) {}
 
+    /** @brief Get armor defense value */
     int get_defense() const { return defense_; }
 
     void use(Character* character) override {

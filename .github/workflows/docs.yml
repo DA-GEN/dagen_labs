@@ -1,0 +1,48 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches:
+      - feature/docs-ci
+      - main
+      - master
+
+# Налаштування прав для GITHUB_TOKEN, щоб дозволити деплой
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: sudo apt-get install -y doxygen
+
+      - name: Generate Documentation
+        run: doxygen Doxyfile
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Вказуємо шлях, куди Doxygen згенерував HTML (має співпадати з OUTPUT_DIRECTORY в Doxyfile + /html)
+          # Якщо в Doxyfile ви не міняли output, то за замовчуванням це 'html' або 'docs/html'
+          path: 'html' 
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

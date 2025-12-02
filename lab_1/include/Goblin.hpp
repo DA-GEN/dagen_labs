@@ -3,8 +3,15 @@
 
 #include "Enemy.hpp"
 
+/**
+ * @brief Goblin enemy - weak enemy type
+ */
 class Goblin : public Enemy {
 public:
+    /**
+     * @brief Construct a new Goblin
+     * @param name Goblin name (default: "Goblin")
+     */
     Goblin(const std::string& name = "Goblin")
         : Enemy(name, 40, 10, 3) {}
 

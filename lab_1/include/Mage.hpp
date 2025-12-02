@@ -3,8 +3,15 @@
 
 #include "Player.hpp"
 
+/**
+ * @brief Mage class with magic attacks that bypass defense
+ */
 class Mage : public Player {
 public:
+    /**
+     * @brief Construct a new Mage
+     * @param name Mage name
+     */
     Mage(const std::string& name)
         : Player(name, 80, 30, 5) {}
 

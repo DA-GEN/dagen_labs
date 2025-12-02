@@ -3,11 +3,18 @@
 
 #include "Enemy.hpp"
 
+/**
+ * @brief Wraith enemy - spectral enemy with 50% physical resistance and life drain
+ */
 class Wraith : public Enemy {
 private:
-    const double physical_resistance_ = 0.5;
+    const double physical_resistance_ = 0.5;  ///< Physical damage resistance (50%)
 
 public:
+    /**
+     * @brief Construct a new Wraith
+     * @param name Wraith name (default: "Wraith")
+     */
     Wraith(const std::string& name = "Wraith")
         : Enemy(name, 60, 18, 5) {}
 
@@ -21,7 +28,10 @@ public:
         heal(heal_amount);
     }
 
-    // Override to apply physical resistance before defense
+    /**
+     * @brief Take damage with physical resistance applied
+     * @param amount Raw damage amount
+     */
     void take_damage(int amount) override {
         if (amount <= 0) return;
 

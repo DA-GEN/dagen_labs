@@ -5,12 +5,19 @@
 #include <cstdlib>
 #include <ctime>
 
+/**
+ * @brief Archer class with 30% critical hit chance (2x damage)
+ */
 class Archer : public Player {
 private:
-    static bool random_initialized_;
-    const int crit_chance_ = 30;
+    static bool random_initialized_;  ///< Random number generator initialization flag
+    const int crit_chance_ = 30;      ///< Critical hit chance percentage
 
 public:
+    /**
+     * @brief Construct a new Archer
+     * @param name Archer name
+     */
     Archer(const std::string& name)
         : Player(name, 100, 20, 8) {
         
