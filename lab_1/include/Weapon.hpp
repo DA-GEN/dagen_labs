@@ -3,7 +3,8 @@
 
 #include "Item.hpp"
 #include "Character.hpp"
-#include <iostream>
+#include <string>
+#include <sstream>
 
 class Weapon : public Item {
 private:
@@ -11,28 +12,28 @@ private:
 
 public:
     Weapon(const std::string& name, const std::string& description, int damage)
-        : Item(name, description), damage_(damage) {}
+        : Item(name, description), damage_(damage) {
+    }
 
     int get_damage() const { return damage_; }
 
-    void use(Character* character) override {
+    std::string use(Character* character) override {
         if (character == nullptr) {
-            std::cout << "Невалідний персонаж!" << std::endl;
-            return;
+            return "Помилка: Невалідний персонаж!";
         }
 
-        std::cout << character->get_name() << " екіпірує " << name_ 
-                  << " (Пошкодження: " << damage_ << ")" << std::endl;
-        
-        character->modify_attack_power(damage_ / 2);  // Boosts attack by half of weapon damage
-        std::cout << "Сила атаки збільшена на " << (damage_ / 2) << "!" << std::endl;
+        int bonus = damage_ / 2;
+        character->modify_attack_power(bonus);
+
+        std::ostringstream ss;
+        ss << "⚔️ " << character->get_name() << " екіпірує " << name_
+            << ". Сила атаки збільшена на " << bonus << "!";
+        return ss.str();
     }
 
-    void display_info() const override {
-        Item::display_info();
-        std::cout << "Пошкодження: " << damage_ << std::endl;
+    std::string get_info_string() const override {
+        return Item::get_info_string() + " (Пошкодження зброї: " + std::to_string(damage_) + ")";
     }
 };
 
 #endif // WEAPON_HPP
-

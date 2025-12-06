@@ -4,7 +4,9 @@
 #include "Character.hpp"
 #include "Item.hpp"
 #include <vector>
+#include <string>
 #include <memory>
+#include <sstream>
 
 class Player : public Character {
 protected:
@@ -12,27 +14,30 @@ protected:
 
 public:
     Player(const std::string& name, int max_hp, int attack_power, int defense)
-        : Character(name, max_hp, attack_power, defense) {}
+        : Character(name, max_hp, attack_power, defense) {
+    }
 
     virtual ~Player() = default;
 
+    // Просто додає предмет, повідомлення генерує Game
     void add_item(Item* item) {
         if (item != nullptr) {
             inventory_.push_back(item);
-            std::cout << name_ << " підбирає " << item->get_name() << std::endl;
         }
     }
 
-    void show_inventory() const {
-        std::cout << "\n=== Інвентар: " << name_ << " ===" << std::endl;
+    // Повертає список рядків для відображення інвентарю в GUI
+    std::vector<std::string> get_inventory_list() const {
+        std::vector<std::string> list;
         if (inventory_.empty()) {
-            std::cout << "Порожньо" << std::endl;
-        } else {
+            list.push_back("Інвентар порожній");
+        }
+        else {
             for (size_t i = 0; i < inventory_.size(); ++i) {
-                std::cout << (i + 1) << ". " << inventory_[i]->get_name() 
-                         << " - " << inventory_[i]->get_description() << std::endl;
+                list.push_back(std::to_string(i + 1) + ". " + inventory_[i]->get_name());
             }
         }
+        return list;
     }
 
     Item* get_item(size_t index) {
@@ -52,11 +57,16 @@ public:
         return inventory_.size();
     }
 
-    void display_stats() const override {
-        Character::display_stats();
-        std::cout << "Інвентар: " << inventory_.size() << " предметів" << std::endl;
+    // Для відображення повної статистики в GUI
+    std::string get_full_stats() const {
+        std::ostringstream ss;
+        ss << get_stats_string() << "\nПредметів в сумці: " << inventory_.size();
+        return ss.str();
     }
+
+    // Перевизначення display_stats не потрібне, якщо ми не використовуємо консоль,
+    // але для сумісності з Character залишаємо базову реалізацію.
+    // Атака має бути реалізована в класах Warrior/Mage/Archer
 };
 
 #endif // PLAYER_HPP
-

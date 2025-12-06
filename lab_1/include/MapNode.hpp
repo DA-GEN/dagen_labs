@@ -2,7 +2,6 @@
 #define MAPNODE_HPP
 
 #include <string>
-#include <iostream>
 
 class Enemy;
 class Item;
@@ -16,9 +15,10 @@ private:
 
 public:
     MapNode(int id, const std::string& description, Enemy* enemy = nullptr, Item* item = nullptr)
-        : id_(id), description_(description), enemy_(enemy), item_(item) {}
+        : id_(id), description_(description), enemy_(enemy), item_(item) {
+    }
 
-    ~MapNode() = default;  // Doesn't delete enemy/item - GameMap owns them
+    ~MapNode() = default;
 
     int get_id() const { return id_; }
     std::string get_description() const { return description_; }
@@ -35,28 +35,12 @@ public:
     void clear_enemy() { enemy_ = nullptr; }
     void clear_item() { item_ = nullptr; }
 
-    void display() const {
-        std::cout << "[Кімната " << id_ << "] " << description_ << std::endl;
-        
-        if (has_enemy()) {
-            std::cout << "  ⚔️  Тут є ворог!" << std::endl;
-        }
-        
-        if (has_item()) {
-            std::cout << "  💎 Тут є предмет!" << std::endl;
-        }
-        
-        if (!has_enemy() && !has_item()) {
-            std::cout << "  (Порожня кімната)" << std::endl;
-        }
-    }
-
     bool operator==(const MapNode& other) const {
         return id_ == other.id_;
     }
 };
 
-// Required for Graph<MapNode*> to work with unordered containers
+// Хеш для роботи з Graph (якщо він використовує unordered_map)
 namespace std {
     template <>
     struct hash<MapNode*> {
@@ -67,4 +51,3 @@ namespace std {
 }
 
 #endif // MAPNODE_HPP
-

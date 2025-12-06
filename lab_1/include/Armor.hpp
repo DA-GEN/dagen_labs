@@ -3,7 +3,8 @@
 
 #include "Item.hpp"
 #include "Character.hpp"
-#include <iostream>
+#include <string>
+#include <sstream>
 
 class Armor : public Item {
 private:
@@ -11,28 +12,32 @@ private:
 
 public:
     Armor(const std::string& name, const std::string& description, int defense)
-        : Item(name, description), defense_(defense) {}
+        : Item(name, description), defense_(defense) {
+    }
 
     int get_defense() const { return defense_; }
 
-    void use(Character* character) override {
+    // ЗМІНА: Повертає рядок замість void
+    std::string use(Character* character) override {
         if (character == nullptr) {
-            std::cout << "Невалідний персонаж!" << std::endl;
-            return;
+            return "Помилка: Невалідний персонаж!";
         }
 
-        std::cout << character->get_name() << " екіпірує " << name_ 
-                  << " (Захист: " << defense_ << ")" << std::endl;
-        
         character->modify_defense(defense_);
-        std::cout << "Захист збільшено на " << defense_ << "!" << std::endl;
+
+        std::ostringstream ss;
+        ss << character->get_name() << " екіпірує " << name_
+            << ". Захист збільшено на " << defense_ << "!";
+        return ss.str();
     }
 
-    void display_info() const override {
-        Item::display_info();
-        std::cout << "Захист: " << defense_ << std::endl;
+    // ЗМІНА: Повертає рядок для відображення в UI
+    std::string get_info_string() const override {
+        return Item::get_info_string() + " (Захист: " + std::to_string(defense_) + ")";
     }
+
+    // display_info видалено або можна залишити як deprecated, 
+    // але краще використовувати get_info_string
 };
 
 #endif // ARMOR_HPP
-

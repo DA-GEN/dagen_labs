@@ -2,26 +2,24 @@
 #define ORC_HPP
 
 #include "Enemy.hpp"
+#include <string>
 
 class Orc : public Enemy {
 public:
     Orc(const std::string& name = "Orc")
-        : Enemy(name, 100, 20, 10) {}
-
-    void attack(Character& target) override {
-        std::cout << name_ << " (Орк) наносить БРУТАЛЬНИЙ УДАР по " 
-                  << target.get_name() << "!" << std::endl;
-        
-        int damage = static_cast<int>(attack_power_ * 1.1);  // 110% damage modifier
-        target.take_damage(damage);
+        : Enemy(name, 100, 20, 10) {
     }
 
-    void display_stats() const override {
-        Character::display_stats();
-        std::cout << "Тип: Орк (Сильний ворог)" << std::endl;
-        std::cout << "Особливість: 110% пошкоджень при атаці" << std::endl;
+    std::string attack(Character& target) override {
+        int damage = static_cast<int>(attack_power_ * 1.1); // 110% damage
+        std::string damage_log = target.take_damage(damage);
+
+        return "👹 " + name_ + " (Орк) завдає БРУТАЛЬНОГО УДАРУ! " + damage_log;
+    }
+
+    std::string get_stats_string() const override {
+        return Character::get_stats_string() + " (Орк: +10% пошкоджень)";
     }
 };
 
 #endif // ORC_HPP
-

@@ -10,12 +10,14 @@
 #include <optional>
 #include <stdexcept>
 
+// Graph не взаємодіє з UI напряму, тому тут змін мінімум.
+// Він просто зберігає дані.
+
 template <typename T>
 class Graph {
 private:
     std::unordered_map<T, std::unordered_set<T>> adjacency_list;
 
-    // Backtrack from end to start using parent pointers
     std::vector<T> reconstruct_path(
         const std::unordered_map<T, T>& parent,
         const T& start,
@@ -23,7 +25,7 @@ private:
     ) const {
         std::vector<T> path;
         T current = end;
-        
+
         while (current != start) {
             path.push_back(current);
             auto it = parent.find(current);
@@ -34,7 +36,7 @@ private:
         }
         path.push_back(start);
         std::reverse(path.begin(), path.end());
-        
+
         return path;
     }
 
@@ -72,11 +74,10 @@ public:
         if (it == adjacency_list.end()) {
             throw std::runtime_error("Node does not exist");
         }
-        
+        // Повертаємо копію вектора сусідів
         return std::vector<T>(it->second.begin(), it->second.end());
     }
 
-    // BFS guarantees shortest path (by number of edges)
     std::vector<T> bfs(const T& start, const T& end) const {
         if (adjacency_list.find(start) == adjacency_list.end()) {
             throw std::runtime_error("Start node does not exist");
@@ -85,9 +86,7 @@ public:
             throw std::runtime_error("End node does not exist");
         }
 
-        if (start == end) {
-            return {start};
-        }
+        if (start == end) return { start };
 
         std::queue<T> queue;
         std::unordered_set<T> visited;
@@ -115,22 +114,14 @@ public:
                 }
             }
         }
-
         return {};
     }
 
-    // DFS finds any path (not necessarily shortest, unlike BFS)
     std::vector<T> dfs(const T& start, const T& end) const {
-        if (adjacency_list.find(start) == adjacency_list.end()) {
-            throw std::runtime_error("Start node does not exist");
-        }
-        if (adjacency_list.find(end) == adjacency_list.end()) {
-            throw std::runtime_error("End node does not exist");
-        }
+        if (adjacency_list.find(start) == adjacency_list.end()) throw std::runtime_error("Start node missing");
+        if (adjacency_list.find(end) == adjacency_list.end()) throw std::runtime_error("End node missing");
 
-        if (start == end) {
-            return {start};
-        }
+        if (start == end) return { start };
 
         std::stack<T> stack;
         std::unordered_set<T> visited;
@@ -143,9 +134,7 @@ public:
             T current = stack.top();
             stack.pop();
 
-            if (current == end) {
-                return reconstruct_path(parent, start, end);
-            }
+            if (current == end) return reconstruct_path(parent, start, end);
 
             auto it = adjacency_list.find(current);
             if (it != adjacency_list.end()) {
@@ -158,13 +147,10 @@ public:
                 }
             }
         }
-
         return {};
     }
 
-    size_t size() const {
-        return adjacency_list.size();
-    }
+    size_t size() const { return adjacency_list.size(); }
 
     bool has_node(const T& data) const {
         return adjacency_list.find(data) != adjacency_list.end();
@@ -172,9 +158,7 @@ public:
 
     bool has_edge(const T& node1_data, const T& node2_data) const {
         auto it = adjacency_list.find(node1_data);
-        if (it == adjacency_list.end()) {
-            return false;
-        }
+        if (it == adjacency_list.end()) return false;
         return it->second.find(node2_data) != it->second.end();
     }
 
@@ -189,4 +173,3 @@ public:
 };
 
 #endif // GRAPH_HPP
-

@@ -3,7 +3,8 @@
 
 #include "Item.hpp"
 #include "Character.hpp"
-#include <iostream>
+#include <string>
+#include <sstream>
 
 class Potion : public Item {
 private:
@@ -11,25 +12,25 @@ private:
 
 public:
     Potion(const std::string& name, const std::string& description, int heal_amount)
-        : Item(name, description), heal_amount_(heal_amount) {}
+        : Item(name, description), heal_amount_(heal_amount) {
+    }
 
     int get_heal_amount() const { return heal_amount_; }
 
-    void use(Character* character) override {
+    std::string use(Character* character) override {
         if (character == nullptr) {
-            std::cout << "Невалідний персонаж!" << std::endl;
-            return;
+            return "Помилка: Невалідний персонаж!";
         }
 
-        std::cout << character->get_name() << " використовує " << name_ << "!" << std::endl;
-        character->heal(heal_amount_);
+        // Викликаємо heal, який повертає рядок (ми його змінили в Character.hpp)
+        std::string heal_log = character->heal(heal_amount_);
+
+        return "🧪 " + character->get_name() << " використовує " << name_ << "! " + heal_log;
     }
 
-    void display_info() const override {
-        Item::display_info();
-        std::cout << "Відновлення: " << heal_amount_ << " HP" << std::endl;
+    std::string get_info_string() const override {
+        return Item::get_info_string() + " (Відновлення: " + std::to_string(heal_amount_) + " HP)";
     }
 };
 
 #endif // POTION_HPP
-

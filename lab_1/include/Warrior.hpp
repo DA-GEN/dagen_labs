@@ -2,26 +2,26 @@
 #define WARRIOR_HPP
 
 #include "Player.hpp"
+#include <string>
 
 class Warrior : public Player {
 public:
     Warrior(const std::string& name)
-        : Player(name, 150, 25, 12) {}
-
-    void attack(Character& target) override {
-        std::cout << name_ << " (Воїн) завдає ПОТУЖНОГО УДАРУ по " 
-                  << target.get_name() << "!" << std::endl;
-        
-        int damage = static_cast<int>(attack_power_ * 1.2);  // 120% damage modifier
-        target.take_damage(damage);
+        : Player(name, 150, 25, 12) {
     }
 
-    void display_stats() const override {
-        Player::display_stats();
-        std::cout << "Клас: Воїн" << std::endl;
-        std::cout << "Особливість: 120% пошкоджень при атаці" << std::endl;
+    std::string attack(Character& target) override {
+        int damage = static_cast<int>(attack_power_ * 1.2);  // 120% пошкоджень
+
+        // Викликаємо take_damage у цілі і отримуємо результат
+        std::string damage_log = target.take_damage(damage);
+
+        return "⚔️ " + name_ + " (Воїн) завдає ПОТУЖНОГО УДАРУ! " + damage_log;
+    }
+
+    std::string get_stats_string() const override {
+        return Player::get_stats_string() + " [Клас: Воїн (+20% атаки)]";
     }
 };
 
 #endif // WARRIOR_HPP
-
