@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1222</width>
+    <height>712</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTextBrowser" name="gameLog">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>60</y>
+      <width>1151</width>
+      <height>481</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="hpBar">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>10</y>
+      <width>291</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>100</number>
+    </property>
+    <property name="format">
+     <string>%v/%m</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnStart">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>560</y>
+      <width>211</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Нова Гра</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnAttack">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>560</y>
+      <width>211</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Атака!</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnMove1">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>560</y>
+      <width>311</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Вихід 1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnMove2">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>560</y>
+      <width>291</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Вихід 2</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1222</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

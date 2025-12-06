@@ -1,0 +1,8 @@
+build*/
+*.pro.user
+*.o
+debug/
+release/
+*.exe
+.qtcreator/
+.qmake.stash
