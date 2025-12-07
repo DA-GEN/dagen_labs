@@ -96,6 +96,18 @@ public:
     GameMap() { init_random(); }
     ~GameMap() = default;
 
+    // Перевіряє, чи всі вороги мертві (або їх взагалі не лишилося)
+    bool allEnemiesDefeated() const {
+        for (const auto& node : nodes_) {
+            if (node->has_enemy()) {
+                if (node->get_enemy()->is_alive()) {
+                    return false; // Знайшли живого ворога -> гра ще не виграна
+                }
+            }
+        }
+        return true; // Нікого не знайшли -> перемога
+    }
+
     void generate_map(int num_rooms, int num_enemies, int num_items) {
         nodes_.clear();
         enemies_.clear();

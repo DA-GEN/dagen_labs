@@ -82,13 +82,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Обробка кінця гри
     connect(game, &Game::gameOver, this, [this](bool victory){
-        updateUI();
-        ui->btnAttack->setEnabled(false);
-        ui->btnMove1->setEnabled(false);
-        ui->btnMove2->setEnabled(false);
+        updateUI(); // Це викличе нашу нову логіку, яка сховає зайві кнопки
 
-        if(victory) ui->gameLog->append("\n🏆 ВІТАЄМО! ВИ ВИГРАЛИ!");
-        else ui->gameLog->append("\n💀 ГРА ЗАКІНЧЕНА.");
+        if(victory) {
+            ui->gameLog->append("\n🏆 ВІТАЄМО! ВИ ВИГРАЛИ! (Всі вороги знищені)");
+            // При перемозі теж ховаємо все зайве
+            ui->btnAttack->setVisible(false);
+            ui->btnMove1->setVisible(false);
+            ui->btnMove2->setVisible(false);
+            ui->btnStart->setVisible(true);
+        }
+        else {
+            ui->gameLog->append("\n💀 ГРА ЗАКІНЧЕНА. Спробуйте ще раз!");
+        }
     });
 
     // --- 2. КНОПКИ (UI -> ГРА) ---
@@ -132,49 +138,61 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateUI()
 {
-    // 1. Оновлення HP
+    // 1. Оновлення HP (це робимо завжди, навіть якщо мертвий)
     int hp = game->getPlayerHP();
     int maxHp = game->getPlayerMaxHP();
     ui->hpBar->setMaximum(maxHp);
     ui->hpBar->setValue(hp);
     ui->hpBar->setFormat("%v / %m HP");
 
-    // Зміна кольору HP (Зелений -> Червоний)
-    if (hp > maxHp * 0.5) {
-        ui->hpBar->setStyleSheet("QProgressBar::chunk { background-color: #2ecc71; }"); // Зелений
-    } else if (hp > maxHp * 0.25) {
-        ui->hpBar->setStyleSheet("QProgressBar::chunk { background-color: #f1c40f; }"); // Жовтий
-    } else {
-        ui->hpBar->setStyleSheet("QProgressBar::chunk { background-color: #e74c3c; }"); // Червоний
+    // Кольори смужки
+    if (hp > maxHp * 0.5) ui->hpBar->setStyleSheet("QProgressBar::chunk { background-color: #2ecc71; }");
+    else if (hp > maxHp * 0.25) ui->hpBar->setStyleSheet("QProgressBar::chunk { background-color: #f1c40f; }");
+    else ui->hpBar->setStyleSheet("QProgressBar::chunk { background-color: #e74c3c; }");
+
+    // --- ВАЖЛИВА ЗМІНА: ЯКЩО ГРАВЕЦЬ МЕРТВИЙ - ХОВАЄМО ВСЕ І ВИХОДИМО ---
+    if (hp <= 0) {
+        ui->btnAttack->setVisible(false);
+        ui->btnMove1->setVisible(false);
+        ui->btnMove2->setVisible(false);
+        ui->btnStart->setVisible(true); // Кнопку "Нова гра" завжди показуємо при смерті
+        return;
     }
+    // -------------------------------------------------------------------
 
     // 2. Логіка кнопки АТАКИ
-    // Кнопка видима і активна тільки якщо є живий ворог
     if (game->getEnemyHP() > 0) {
         ui->btnAttack->setVisible(true);
         ui->btnAttack->setEnabled(true);
         ui->btnAttack->setText(QString("АТАКА (%1 HP)").arg(game->getEnemyHP()));
     } else {
-        ui->btnAttack->setVisible(false); // Ховаємо кнопку, якщо ворога немає
+        ui->btnAttack->setVisible(false);
     }
 
-    // 3. Логіка кнопок РУХУ (динамічна)
-    // Отримуємо список виходів з поточної кімнати
-    QVector<QString> exits = game->getAvailableExits();
+    // 3. Логіка кнопок РУХУ
+    // (Ми сюди дійдемо тільки якщо гравець живий, бо вище стоїть return)
 
-    // Кнопка 1 (перший вихід)
-    if (exits.size() > 0) {
-        ui->btnMove1->setVisible(true);
-        ui->btnMove1->setText(exits[0]); // Пишемо "Кімната 5: Темний зал"
-    } else {
-        ui->btnMove1->setVisible(false); // Якщо виходу немає - ховаємо кнопку
-    }
-
-    // Кнопка 2 (другий вихід)
-    if (exits.size() > 1) {
-        ui->btnMove2->setVisible(true);
-        ui->btnMove2->setText(exits[1]);
-    } else {
+    // Якщо є живий ворог - рух заборонено
+    if (game->getEnemyHP() > 0) {
+        ui->btnMove1->setVisible(false);
         ui->btnMove2->setVisible(false);
+    }
+    else {
+        // Якщо ворогів немає - показуємо виходи
+        QVector<QString> exits = game->getAvailableExits();
+
+        if (exits.size() > 0) {
+            ui->btnMove1->setVisible(true);
+            ui->btnMove1->setText(exits[0]);
+        } else {
+            ui->btnMove1->setVisible(false);
+        }
+
+        if (exits.size() > 1) {
+            ui->btnMove2->setVisible(true);
+            ui->btnMove2->setText(exits[1]);
+        } else {
+            ui->btnMove2->setVisible(false);
+        }
     }
 }

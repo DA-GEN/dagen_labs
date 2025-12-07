@@ -107,14 +107,22 @@ public slots:
     void actionMove(int exitIndex) {
         if (!game_running_) return;
 
+        // --- НОВА ЛОГІКА: БЛОКУВАННЯ ---
+        MapNode* currentRoom = dungeon_->get_node_by_id(current_room_id_);
+        if (currentRoom->has_enemy()) {
+            emit logMessage("⛔ Ви не можете вийти з кімнати під час бою! Переможіть ворога.");
+            return;
+        }
+        // -------------------------------
+
         auto neighbors = dungeon_->get_neighbors(current_room_id_);
 
         if (exitIndex >= 0 && exitIndex < static_cast<int>(neighbors.size())) {
             current_room_id_ = neighbors[exitIndex]->get_id();
             emit logMessage(QString("\n---> Ви перейшли до кімнати %1").arg(current_room_id_));
             updateCurrentRoomInfo();
-        }
-        else {
+            emit statsUpdated(); // Оновити UI
+        } else {
             emit logMessage("Неможливо піти в цьому напрямку.");
         }
     }
@@ -134,8 +142,6 @@ public slots:
         Enemy* enemy = room->get_enemy();
 
         // 1. Хід гравця
-        // Примітка: Для кращого UI, ваші методи attack() в класах Player/Enemy 
-        // мали б повертати string. Зараз ми просто логуємо факт удару.
         player_->attack(*enemy);
         emit logMessage(QString("Ви атакували %1!").arg(QString::fromStdString(enemy->get_name())));
 
@@ -143,7 +149,19 @@ public slots:
         if (!enemy->is_alive()) {
             emit logMessage(QString("🎉 ПЕРЕМОГА! %1 знищено.").arg(QString::fromStdString(enemy->get_name())));
             room->clear_enemy();
-            updateCurrentRoomInfo(); // Оновити інтерфейс (прибрати кнопку атаки)
+
+            // --- НОВА ЛОГІКА: ПЕРЕВІРКА ПОВНОЇ ЗАЧИСТКИ ---
+            if (dungeon_->allEnemiesDefeated()) {
+                emit logMessage("\n🏆 ВІТАЄМО! ПІДЗЕМЕЛЛЯ ЗАЧИЩЕНО!");
+                emit logMessage("Всі вороги знищені. Ви справжній герой!");
+                game_running_ = false;
+                emit gameOver(true);
+            } else {
+                emit logMessage("Підземелля стало трохи безпечнішим, але вороги ще залишилися...");
+            }
+            // ----------------------------------------------
+
+            updateCurrentRoomInfo();
             emit statsUpdated();
             return;
         }
