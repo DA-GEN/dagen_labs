@@ -60,4 +60,7 @@ doxygen Doxyfile
 
 Результат з'являється в `docs/html/index.html`. Документація
 автоматично публікується на GitHub Pages при push у `main` (див.
-[`.github/workflows/docs.yml`](.github/workflows/docs.yml)).
+[`.github/workflows/docs.yml`](.github/workflows/docs.yml)) і
+доступна за адресою:
+
+**https://da-gen.github.io/dungeon_game/**
