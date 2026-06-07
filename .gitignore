@@ -6,3 +6,4 @@ release/
 *.exe
 .qtcreator/
 .qmake.stash
+docs/

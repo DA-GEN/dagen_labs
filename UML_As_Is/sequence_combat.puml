@@ -1,0 +1,71 @@
+@startuml
+title Діаграма послідовності "Як є" (As-Is) - раунд бою (натискання "Атакувати")
+
+actor Гравець as user
+participant "MainWindow\n<<QMainWindow>>" as MW
+participant "Game\n<<QObject>>" as Game
+participant "GameMap" as Map
+participant "Player" as Player
+participant "Enemy" as Enemy
+
+user -> MW : клік "Атакувати"
+activate MW
+MW -> Game : actionAttack()
+activate Game
+
+Game -> Map : get_node_by_id(currentRoomId)
+activate Map
+Map --> Game : MapNode*
+deactivate Map
+
+Game -> Game : enemy = room->get_enemy()
+
+Game -> Player : attack(*enemy)
+activate Player
+Player -> Enemy : take_damage(amount)
+activate Enemy
+Enemy --> Player : "...завдано Х шкоди..."
+deactivate Enemy
+Player --> Game : опис атаки
+deactivate Player
+
+Game -> Game : emit logMessage("Ви атакували ...")
+Game -> MW : signal logMessage(QString)
+MW -> MW : updateUI() / append log
+
+alt ворог переможений
+    Game -> Map : room->clear_enemy()
+    Game -> Game : emit logMessage("ПЕРЕМОГА!")
+    Game -> Game : emit gameOver(true) [якщо підземелля зачищене]
+else ворог живий
+    Game -> Enemy : attack(*player_)
+    activate Enemy
+    Enemy -> Player : take_damage(amount)
+    activate Player
+    Player --> Enemy : опис контратаки
+    deactivate Player
+    Enemy --> Game : опис контратаки
+    deactivate Enemy
+    Game -> Game : emit logMessage("атакує вас у відповідь!")
+
+    alt гравець загинув
+        Game -> Game : emit logMessage("ВАС ВБИТО!")
+        Game -> Game : emit gameOver(false)
+    end
+end
+
+Game -> Game : emit statsUpdated()
+Game -> MW : signal statsUpdated()
+MW -> MW : updateUI() / оновити HP-бари
+deactivate Game
+deactivate MW
+
+note over Game, MW
+  <b>Проблема (SRP/DIP):</b> уся бізнес-логіка бою виконується
+  всередині QObject-класу Game і повідомляє UI лише через
+  Qt-сигнали. Розрив цієї логіки з Qt неможливий: для тестування
+  навіть одного раунду бою потрібен QApplication і повноцінний
+  ланцюжок сигнал/слот.
+end note
+
+@enduml
