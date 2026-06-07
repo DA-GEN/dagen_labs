@@ -1,0 +1,36 @@
+@startuml communication_combat
+!pragma layout smetana
+title Діаграма комунікації - той самий раунд бою, що й на діаграмі послідовності (альтернативна нотація)
+
+left to right direction
+skinparam objectAttributeIconSize 0
+
+object "гравець : Actor" as user
+object "mw : MainWindow (QMainWindow)" as MW
+object "game : Game (QObject)" as Game
+object "map : GameMap" as Map
+object "player : Player" as Player
+object "enemy : Enemy" as Enemy
+
+user --> MW : 1: клік "Атакувати"
+MW --> Game : 2: actionAttack()
+Game --> Map : 3: get_node_by_id(currentRoomId)
+Map --> Game : 4: повертає MapNode*
+Game --> Player : 5: attack(*enemy)
+Player --> Enemy : 6: take_damage(amount)
+Enemy --> Player : 7: повертає опис атаки
+Game --> MW : 8: signal logMessage(QString)
+Game --> Enemy : 9: attack(*player) [якщо ворог живий]
+Enemy --> Player : 10: take_damage(amount)
+Game --> MW : 11: signal statsUpdated()
+
+note right of Game
+  <b>Чому корисна діаграма комунікації:</b> на відміну від
+  діаграми послідовності (яка наголошує на ПОРЯДКУ в часі),
+  ця нотація наголошує на СТРУКТУРІ зв'язків між об'єктами -
+  одразу видно, що game напряму зв'язаний з усіма учасниками
+  (map, player, enemy, mw), що й виявляє проблему SRP/DIP:
+  один клас-"бог" утримує посилання на всю підсистему бою.
+end note
+
+@enduml

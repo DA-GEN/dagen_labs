@@ -1,0 +1,39 @@
+@startuml
+!pragma layout smetana
+title Діаграма розгортання "Як буде" (To-Be) - артефакти збирання й місце виконання
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+node "ПК користувача (Windows / Linux / macOS)" as PC {
+
+  artifact "dungeon_core\n(header-only / static .lib)" as CoreLib #E8F5E9
+
+  node "Процес: dungeonqt (Qt GUI)" as QtProc #E3F2FD {
+    artifact "dungeonqt(.exe)" as QtExe
+    component "Qt Widgets\nRuntime (.dll/.so)" as QtRuntime
+  }
+
+  node "Процес: dungeon_core_tests (CLI)" as TestProc #FCE4EC {
+    artifact "dungeon_core_tests(.exe)" as TestExe
+    component "GoogleTest\nRuntime" as GTestRuntime
+  }
+}
+
+CoreLib --> QtExe : статично лінкується\n(без залежності від Qt)
+CoreLib --> TestExe : статично лінкується\n(той самий артефакт)
+QtExe --> QtRuntime : використовує під час\nвиконання
+TestExe --> GTestRuntime : використовує під час\nвиконання
+
+note bottom of CoreLib
+  <b>Архітектурний виграш розгортання:</b> "dungeon_core" -
+  єдиний, незалежний від Qt артефакт, який можна підключити
+  до БУДЬ-ЯКОГО споживача (поточний Qt GUI, тести, у
+  майбутньому - консольний клієнт чи веб-сервіс через WASM).
+  В As-Is такого поділу не існувало: уся логіка була
+  вкомпільована безпосередньо в єдиний виконуваний файл
+  Qt-застосунку, і її не можна було ні перевикористати,
+  ні протестувати без запуску повного GUI.
+end note
+
+@enduml
