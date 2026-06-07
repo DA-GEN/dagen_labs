@@ -65,23 +65,23 @@ MainWindow::MainWindow(QWidget *parent)
         "}"
         );
 
-    game = new Game(this);
+    game = new GameController(this);
 
     // --- 1. СИГНАЛИ ВІД ГРИ ---
 
     // Логування тексту
-    connect(game, &Game::logMessage, this, [this](QString msg){
+    connect(game, &GameController::logMessage, this, [this](QString msg){
         ui->gameLog->append(msg);
         ui->gameLog->verticalScrollBar()->setValue(ui->gameLog->verticalScrollBar()->maximum());
     });
 
     // Оновлення кнопок і HP, коли щось змінюється в грі
-    connect(game, &Game::statsUpdated, this, &MainWindow::updateUI);
-    connect(game, &Game::roomUpdated, this, &MainWindow::updateUI);
-    connect(game, &Game::gameStarted, this, &MainWindow::updateUI);
+    connect(game, &GameController::statsUpdated, this, &MainWindow::updateUI);
+    connect(game, &GameController::roomUpdated, this, &MainWindow::updateUI);
+    connect(game, &GameController::gameStarted, this, &MainWindow::updateUI);
 
     // Обробка кінця гри
-    connect(game, &Game::gameOver, this, [this](bool victory){
+    connect(game, &GameController::gameOver, this, [this](bool victory){
         updateUI(); // Це викличе нашу нову логіку, яка сховає зайві кнопки
 
         if(victory) {
@@ -111,7 +111,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // Атака
-    connect(ui->btnAttack, &QPushButton::clicked, game, &Game::actionAttack);
+    connect(ui->btnAttack, &QPushButton::clicked, game, &GameController::actionAttack);
 
     // Рух (Кнопка 1)
     connect(ui->btnMove1, &QPushButton::clicked, this, [this](){

@@ -1,0 +1,41 @@
+@startuml
+!pragma layout smetana
+title Діаграма станів - ігрова сесія Dungeon Game (As-Is / To-Be, логіка станів незмінна)
+
+state "Дослідження" as Exploring
+state "Бій" as Combat
+state "Перемога" as Victory <<end>>
+state "Поразка" as Defeat <<end>>
+
+[*] --> Exploring : старт нової гри\n(згенеровано підземелля)
+
+Exploring --> Combat : вхід у кімнату\nз живим ворогом
+Combat --> Exploring : ворог переможений,\nкімната очищена
+Combat --> Defeat : HP гравця <= 0
+Exploring --> Victory : усі вороги переможені\nабо досягнуто фінальної кімнати
+
+Victory --> [*]
+Defeat --> [*]
+
+note right of Exploring
+  Гравець переміщується кімнатами
+  підземелля, підбирає предмети
+  й читає опис поточної локації.
+end note
+
+note right of Combat
+  Відбувається покроковий обмін
+  атаками між гравцем і ворогом
+  поточної кімнати.
+  --
+  <b>As-Is:</b> перехід керує QObject-клас
+  Game::actionAttack() (Qt-сигнали).
+  <b>To-Be:</b> та сама машина станів, але
+  переходи генерує GameEngine::action_attack()
+  і сповіщає про них через IGameObserver -
+  поведінка ідентична, змінено лише механізм
+  сповіщення (підтверджено однаковою CCN=8
+  до і після рефакторингу).
+end note
+
+@enduml

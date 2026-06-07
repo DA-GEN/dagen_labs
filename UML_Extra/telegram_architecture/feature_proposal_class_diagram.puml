@@ -1,0 +1,65 @@
+@startuml
+!pragma layout smetana
+title Пропозиція нової фічі - "Спільні завдання в чаті" (доповнення доменної моделі Telegram-подібного застосунку)
+
+skinparam classAttributeIconSize 0
+
+note as Idea
+  <b>Ідея фічі (якої немає в Telegram):</b> повідомлення-чекліст
+  "Спільні завдання" - учасники групового чату можуть разом
+  вести список справ просто всередині переписки (наприклад,
+  підготовка до поїздки чи організація заходу), відмічати
+  пункти виконаними, а застосунок сам сповіщає чат і автора
+  про прогрес. Зараз для цього доводиться користуватися
+  зовнішніми сервісами (Trello, Google Keep тощо).
+end note
+
+abstract class MessageContent {
+  + {abstract} render(): string
+}
+
+class TaskListContent <<нова>> #FFF9C4 {
+  - title: string
+  - items: TaskItem[]
+  - createdBy: User
+  + addItem(text: string): TaskItem
+  + toggleItem(item: TaskItem, by: User)
+  + progress(): float
+  + render(): string
+}
+
+class TaskItem <<нова>> #FFF9C4 {
+  - id: string
+  - text: string
+  - isDone: bool
+  - completedBy: User
+  - completedAt: DateTime
+}
+
+class TextContent
+class MediaContent
+
+interface INotifier {
+  + {abstract} notify(user: User, message: Message)
+}
+
+MessageContent <|-- TaskListContent
+MessageContent <|-- TextContent
+MessageContent <|-- MediaContent
+TaskListContent *-- "1..*" TaskItem : items
+
+TaskListContent ..> INotifier : сповіщає учасників\nпро виконання пункту
+
+note right of TaskListContent
+  <b>Чому це природне розширення моделі:</b> TaskListContent
+  лише реалізує вже наявний контракт MessageContent::render(),
+  тому Chat і Message не потребують жодних змін - це приклад
+  дотримання OCP (відкритість до розширення, закритість до
+  модифікації) на рівні власної доменної моделі.
+  Сповіщення про виконання пунктів повторно використовує
+  той самий механізм INotifier (Спостерігач), що й push-сповіщення
+  про нові повідомлення - нову інфраструктуру не потрібно
+  створювати, лише новий тип події.
+end note
+
+@enduml

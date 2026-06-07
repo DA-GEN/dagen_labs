@@ -1,0 +1,134 @@
+@startuml
+!pragma layout smetana
+title Концептуальна діаграма класів - доменна модель месенджера "Telegram-подібний застосунок"
+
+skinparam classAttributeIconSize 0
+
+class User {
+  - id: string
+  - phoneNumber: string
+  - displayName: string
+  - status: OnlineStatus
+  + sendMessage(chat: Chat, content: MessageContent): Message
+  + createChat(participants: User[]): Chat
+}
+
+enum OnlineStatus {
+  Online
+  Offline
+  RecentlySeen
+}
+
+abstract class Chat {
+  # id: string
+  # title: string
+  # participants: User[]
+  + {abstract} addMessage(message: Message)
+  + {abstract} getHistory(): Message[]
+  + getParticipants(): User[]
+}
+note right of Chat
+  <b>Узагальнення:</b> особисті, групові
+  чати й канали мають спільну поведінку
+  (зберігати/повертати історію), але
+  різні правила членства й видимості -
+  природний кандидат на ієрархію класів.
+end note
+
+class PrivateChat
+class GroupChat {
+  - admins: User[]
+  + addParticipant(user: User)
+  + removeParticipant(user: User)
+}
+class Channel {
+  - subscribers: User[]
+  - isPublic: bool
+  + subscribe(user: User)
+  + broadcast(message: Message)
+}
+
+class Message {
+  - id: string
+  - sender: User
+  - timestamp: DateTime
+  - status: DeliveryStatus
+  + content: MessageContent
+  + markAsRead(by: User)
+  + edit(newContent: MessageContent)
+  + delete()
+}
+
+enum DeliveryStatus {
+  Sent
+  Delivered
+  Read
+}
+
+abstract class MessageContent {
+  + {abstract} render(): string
+}
+class TextContent {
+  - text: string
+}
+class MediaContent {
+  - mediaUrl: string
+  - mediaType: MediaType
+  - thumbnail: bytes
+}
+enum MediaType {
+  Photo
+  Video
+  Voice
+  Document
+}
+
+interface IEncryptionStrategy {
+  + {abstract} encrypt(content: MessageContent): bytes
+  + {abstract} decrypt(data: bytes): MessageContent
+}
+class StandardEncryption implements IEncryptionStrategy
+class EndToEndEncryption implements IEncryptionStrategy
+note right of IEncryptionStrategy
+  <b>Патерн Стратегія:</b> звичайні чати й
+  "секретні чати" відрізняються лише
+  способом шифрування контенту - решта
+  логіки (відправлення, історія, статуси)
+  спільна. Підміна стратегії не вимагає
+  зміни класів Chat/Message.
+end note
+
+interface INotifier {
+  + {abstract} notify(user: User, message: Message)
+}
+class PushNotifier implements INotifier
+class InAppNotifier implements INotifier
+note right of INotifier
+  <b>Патерн Спостерігач:</b> Chat сповіщає
+  передплачені сервіси (push, внутрішні
+  банери) про нове повідомлення, не
+  знаючи деталей їхньої реалізації -
+  так само, як GameEngine у dungeon_game
+  сповіщає IGameObserver.
+end note
+
+User "1" -- "0..*" Message : надсилає >
+Chat "1" o-- "0..*" Message : історія
+Chat "0..*" -- "2..*" User : учасники
+
+Chat <|-- PrivateChat
+Chat <|-- GroupChat
+Chat <|-- Channel
+
+Message *-- "1" MessageContent
+MessageContent <|-- TextContent
+MessageContent <|-- MediaContent
+MediaContent --> MediaType
+
+Message ..> DeliveryStatus
+User --> OnlineStatus
+
+Chat o-right-> "1" IEncryptionStrategy : шифрування
+Chat o-down-> "0..*" INotifier : сповіщення
+
+@enduml

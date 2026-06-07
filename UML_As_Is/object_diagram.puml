@@ -1,0 +1,59 @@
+@startuml
+!pragma layout smetana
+title Об'єктна діаграма - знімок стану гри в певний момент (доменна модель спільна для As-Is і To-Be)
+
+skinparam objectAttributeIconSize 0
+
+object "ярема : Warrior" as player {
+  name_ = "Ярема"
+  hp_ = 38 / 50
+  attack_power_ = 14
+  defense_ = 6
+}
+
+object "меч_ветерана : Weapon" as sword {
+  name_ = "Меч ветерана"
+  description_ = "+5 до сили атаки"
+}
+
+object "зілля_лікування : Potion" as potion {
+  name_ = "Мале зілля лікування"
+  description_ = "Відновлює 20 HP"
+}
+
+object "кімната_7 : MapNode" as room7 {
+  id_ = 7
+  description_ = "Вологий коридор зі смолоскипами"
+}
+
+object "кімната_8 : MapNode" as room8 {
+  id_ = 8
+  description_ = "Зала з кам'яним вівтарем"
+}
+
+object "гоблін_вартовий : Goblin" as goblin {
+  name_ = "Гоблін-вартовий"
+  hp_ = 9 / 20
+  attack_power_ = 6
+  defense_ = 2
+}
+
+object "підземелля : GameMap" as dungeon
+
+player ..> sword : inventory_[0]
+player ..> potion : inventory_[1]
+dungeon o-- room7
+dungeon o-- room8
+room7 -- room8 : суміжні\n(ребро графа)
+player -- room7 : currentRoomId
+room7 *-- goblin : enemy_
+
+note bottom of player
+  <b>Чому корисна об'єктна діаграма:</b> на відміну від
+  класової, вона фіксує конкретні значення атрибутів і
+  зв'язки в один момент часу - зручно для пояснення
+  тестових сценаріїв (саме такий стан моделюють юніт-тести
+  бойової системи) і для дебагу конкретного "репро" багу.
+end note
+
+@enduml

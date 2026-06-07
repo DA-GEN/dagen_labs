@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "Game.hpp" // Підключаємо нашу гру
+#include "GameController.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,12 +17,12 @@ public:
     ~MainWindow();
 
 private slots:
-    // Слот для оновлення інтерфейсу (коли гра надсилає сигнал)
+    // Слот для оновлення інтерфейсу (коли контролер надсилає сигнал)
     void updateUI();
 
 private:
     Ui::MainWindow *ui;
-    Game *game; // Вказівник на об'єкт гри
+    GameController *game; // Адаптер над незалежним від Qt ігровим рушієм (GameEngine)
 };
 
 #endif // MAINWINDOW_H

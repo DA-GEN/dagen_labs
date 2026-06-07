@@ -1,0 +1,24 @@
+name: Юніт-тести core (CMake + GoogleTest)
+
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Завантажити репозиторій
+        uses: actions/checkout@v4
+
+      - name: Налаштувати CMake
+        run: cmake -B build -S . -DDUNGEON_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Зібрати ядро core та тести
+        run: cmake --build build -j
+
+      - name: Запустити юніт-тести
+        run: ctest --test-dir build --output-on-failure

@@ -1,0 +1,55 @@
+@startuml
+title Діаграма активностей "Як є" (As-Is) - ігровий цикл
+
+start
+:Гравець вводить ім'я\nта обирає клас персонажа;
+:Game::startNewGame() генерує підземелля\n(GameMap::generate_map);
+:emit gameStarted(), roomUpdated(), statsUpdated();
+
+repeat
+  :MainWindow показує опис кімнати,\nХП гравця/ворога, доступні дії;
+  switch (Дія гравця?)
+  case (перейти в іншу кімнату)
+    if (у кімнаті є ворог?) then (так)
+      :emit logMessage("неможливо вийти під час бою");
+    else (ні)
+      :Game::actionMove(exitIndex);
+      :emit roomUpdated(), statsUpdated();
+    endif
+  case (атакувати)
+    :Game::actionAttack();
+    :гравець завдає шкоди ворогу;
+    if (ворог переможений?) then (так)
+      :room->clear_enemy();
+      if (усіх ворогів знищено?) then (так)
+        :emit gameOver(true);
+      endif
+    else (ні)
+      :ворог контратакує гравця;
+      if (гравець загинув?) then (так)
+        :emit gameOver(false);
+      endif
+    endif
+    :emit logMessage(), statsUpdated();
+  case (підібрати предмет)
+    :Game::actionTakeItem();
+    :player_->add_item(item); room->clear_item();
+    :emit logMessage(), statsUpdated();
+  case (вийти з підземелля)
+    if (це фінальна кімната?) then (так)
+      :emit gameOver(true);
+    endif
+  endswitch
+repeat while (гру не завершено?) is (так)
+->ні;
+
+if (перемога?) then (так)
+  :показати екран перемоги;
+else (ні)
+  :показати екран поразки;
+endif
+
+:гравець може почати нову гру;
+stop
+
+@enduml

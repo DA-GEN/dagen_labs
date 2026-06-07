@@ -1,0 +1,77 @@
+@startuml
+title Діаграма послідовності "Як буде" (To-Be) - раунд бою (натискання "Атакувати")
+
+actor Гравець as user
+participant "MainWindow\n<<QMainWindow>>" as MW
+participant "GameController\n<<QObject>>\n(реалізує IGameObserver)" as GC
+participant "GameEngine\n(чистий C++, без Qt)" as GE
+participant "Player" as Player
+participant "Enemy" as Enemy
+
+user -> MW : клік "Атакувати"
+activate MW
+MW -> GC : actionAttack()  [Qt-слот]
+activate GC
+GC -> GE : action_attack()
+activate GE
+
+GE -> GE : enemy = room->get_enemy()
+GE -> Player : attack(*enemy)
+activate Player
+Player -> Enemy : take_damage(amount, DamageType::Physical/Magical)
+activate Enemy
+Enemy -> Enemy : apply_defense(amount, type)\n(шаблонний метод; Wraith\nперевизначає лише цей хук)
+Enemy --> Player : опис атаки
+deactivate Enemy
+Player --> GE : опис атаки
+deactivate Player
+
+GE -> GC : observer_.on_log_message("Ви атакували ...")
+note right
+  <b>Межа DIP:</b> GameEngine звертається лише
+  до абстракції IGameObserver. Він "не знає",
+  що на іншому кінці - QObject із Qt-сигналами.
+end note
+GC -> GC : emit logMessage(QString::fromStdString(...))
+GC -> MW : signal logMessage(QString)
+MW -> MW : updateUI() / append log
+
+alt ворог переможений
+    GE -> GE : room->clear_enemy()
+    GE -> GC : on_log_message("ПЕРЕМОГА!")
+    GE -> GC : on_game_over(true)  [якщо підземелля зачищене]
+    GC -> GC : emit gameOver(true)
+else ворог живий
+    GE -> Enemy : attack(*player_)
+    activate Enemy
+    Enemy -> Player : take_damage(amount, type)
+    activate Player
+    Player --> Enemy : опис контратаки
+    deactivate Player
+    Enemy --> GE : опис контратаки
+    deactivate Enemy
+    GE -> GC : on_log_message("атакує вас у відповідь!")
+
+    alt гравець загинув
+        GE -> GC : on_log_message("ВАС ВБИТО!")
+        GE -> GC : on_game_over(false)
+        GC -> GC : emit gameOver(false)
+    end
+end
+
+GE -> GC : on_stats_updated()
+GC -> GC : emit statsUpdated()
+GC -> MW : signal statsUpdated()
+MW -> MW : updateUI() / оновити HP-бари
+deactivate GE
+deactivate GC
+deactivate MW
+
+note over GE, GC
+  <b>Результат:</b> усю послідовність дій від
+  "GE -> Player : attack(...)" до "GE -> GC : on_stats_updated()"
+  можна відтворити й перевірити в юніт-тесті за допомогою
+  SpyGameObserver - без MainWindow, без QApplication, без Qt.
+end note
+
+@enduml

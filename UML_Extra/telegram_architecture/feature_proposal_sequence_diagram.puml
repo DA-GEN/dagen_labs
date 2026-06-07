@@ -1,0 +1,56 @@
+@startuml
+title Пропозиція нової фічі - "Спільні завдання в чаті": сценарій створення й виконання чекліста
+
+actor "Автор\n(Олена)" as Author
+actor "Учасник\n(Богдан)" as Member
+participant "ChatService" as Chat
+participant "TaskListContent" as Task
+participant "INotifier" as Notifier
+
+Author -> Chat : sendMessage(chat, TaskListContent("Підготовка до походу"))
+activate Chat
+Chat -> Task : create(title, createdBy=Олена)
+activate Task
+Task -> Task : addItem("Купити заряд для ліхтариків")
+Task -> Task : addItem("Забронювати майданчик")
+Task --> Chat : TaskListContent
+deactivate Task
+Chat -> Chat : addMessage(chat, message)
+Chat -> Notifier : notify(учасники, "Олена створила список завдань")
+activate Notifier
+Notifier --> Member : push-сповіщення
+deactivate Notifier
+Chat --> Author : Message надіслано
+deactivate Chat
+
+...через деякий час...
+
+Member -> Chat : toggleItem(taskList, "Забронювати майданчик")
+activate Chat
+Chat -> Task : toggleItem(item, by=Богдан)
+activate Task
+Task -> Task : item.isDone = true\nitem.completedBy = Богдан
+Task -> Task : progress() -> 50%
+Task --> Chat : оновлений стан чекліста
+deactivate Task
+
+Chat -> Notifier : notify(автор, "Богдан виконав\n«Забронювати майданчик» (50%)")
+activate Notifier
+Notifier --> Author : push-сповіщення
+deactivate Notifier
+
+Chat -> Chat : render() -> оновити перегляд\nповідомлення для всіх учасників
+Chat --> Member : підтвердження зміни
+deactivate Chat
+
+note over Chat, Notifier
+  <b>Перевикористання архітектури:</b> сценарій не потребує
+  жодного нового шляху сповіщень - TaskListContent лише
+  ініціює виклик уже наявного INotifier::notify(), так само,
+  як це робить ChatService для звичайних повідомлень. Це
+  ілюструє, як вдале застосування патерну Спостерігач у
+  базовій моделі автоматично "вмикає" підтримку нових
+  типів подій без зміни сервісного шару.
+end note
+
+@enduml

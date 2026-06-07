@@ -1,0 +1,195 @@
+@startuml
+!pragma layout smetana
+title Діаграма класів "Як буде" (To-Be) - Dungeon Game (після рефакторингу)
+skinparam classAttributeIconSize 0
+left to right direction
+
+package "core (Qt-незалежна бібліотека)" #E8F5E9 {
+
+  interface IRandomProvider {
+    + {abstract} next_int(min,max: int): int
+    + {abstract} roll_chance(percent: int): bool
+  }
+  class RandomProvider implements IRandomProvider {
+    - engine_: mt19937
+  }
+  note right of RandomProvider
+    <b>Патерн:</b> Залежність через інтерфейс (DIP) +
+    Dependency Injection. Усі джерела випадковості
+    (Archer, фабрики, GameMap) отримують
+    IRandomProvider& ззовні - їх можна підмінити
+    детермінованою заглушкою в тестах.
+  end note
+
+  enum DamageType {
+    Physical
+    Magical
+  }
+
+  abstract class Character {
+    # name_: string
+    # hp_, max_hp_, attack_power_, defense_: int
+    + {abstract} attack(target: Character&): string
+    + take_damage(amount:int, type: DamageType = Physical): string
+    # {virtual} apply_defense(amount:int, type: DamageType): int
+  }
+  note right of Character
+    <b>Патерн:</b> Шаблонний метод (Template Method).
+    take_damage() - незмінний "скелет"; apply_defense() -
+    точка розширення для підкласів (напр. Wraith).
+    Це усуває потребу перевизначати весь take_damage().
+  end note
+
+  class Player
+  class Warrior
+  class Mage
+  class Archer {
+    - rng_: IRandomProvider&
+    - crit_chance_: int
+  }
+
+  class Enemy
+  class Goblin
+  class Orc
+  class Wraith {
+    # apply_defense(amount:int, type: DamageType): int
+  }
+
+  abstract class Item
+  class Weapon
+  class Armor
+  class Potion
+
+  class MapNode
+  class "Graph<T>" as Graph
+
+  interface IEnemyFactory {
+    + {abstract} create_random_enemy(): unique_ptr<Enemy>
+  }
+  class EnemyFactory implements IEnemyFactory {
+    - rng_: IRandomProvider&
+  }
+  interface IItemFactory {
+    + {abstract} create_random_item(): unique_ptr<Item>
+  }
+  class ItemFactory implements IItemFactory {
+    - rng_: IRandomProvider&
+  }
+  note bottom of EnemyFactory
+    <b>Патерн:</b> Фабричний метод (Factory Method).
+    GameMap більше не "знає" про Goblin/Orc/Wraith/
+    Weapon/Armor/Potion безпосередньо - він працює
+    лише з абстракціями IEnemyFactory/IItemFactory
+    (виправляє порушення OCP та DRY генерації).
+  end note
+
+  class GameMap {
+    - rng_: IRandomProvider&
+    - enemy_factory_: const IEnemyFactory&
+    - item_factory_: const IItemFactory&
+    + generate_map(rooms,enemies,items: int)
+  }
+
+  interface IGameObserver {
+    + {abstract} on_log_message(message: string)
+    + {abstract} on_stats_updated()
+    + {abstract} on_room_updated(desc: string, hasEnemy: bool, hasItem: bool)
+    + {abstract} on_game_started()
+    + {abstract} on_game_over(victory: bool)
+  }
+  note right of IGameObserver
+    <b>Патерн:</b> Спостерігач (Observer) /
+    Інверсія залежностей (DIP). Це і є межа
+    між "core" та "ui": GameEngine не знає
+    про Qt і викликає лише ці абстрактні методи.
+  end note
+
+  class GameEngine {
+    - observer_: IGameObserver&
+    - rng_: RandomProvider
+    - enemy_factory_: EnemyFactory
+    - item_factory_: ItemFactory
+    - dungeon_: unique_ptr<GameMap>
+    - player_: unique_ptr<Player>
+    + start_new_game(name: string, classChoice: int)
+    + action_attack()
+    + action_move(exitIndex: int)
+    + action_take_item()
+    + action_exit_dungeon()
+    + get_player_hp(): int
+    + get_available_exits(): vector<string>
+  }
+  note bottom of GameEngine
+    <b>Результат поділу (SRP):</b> уся ігрова логіка тепер
+    у "чистому" C++17 без жодної залежності від Qt - її
+    можна збирати, виконувати й юніт-тестувати (GoogleTest)
+    окремо від GUI, у консолі чи будь-якому іншому шарі UI.
+  end note
+}
+
+package "ui (тонкий адаптер Qt)" #E3F2FD {
+  class "GameController\n<<QObject>>" as GameController #FFF9C4 {
+    - engine_: unique_ptr<GameEngine>
+    .. реалізує IGameObserver ..
+    + on_log_message(msg: string)
+    + on_stats_updated()
+    .. сигнали Qt ..
+    + logMessage(QString)
+    + statsUpdated()
+    + roomUpdated(QString,bool,bool)
+    + gameOver(bool)
+    .. слоти Qt ..
+    + startNewGame(QString,int)
+    + actionAttack()
+  }
+  note right of GameController
+    <b>Патерн:</b> Адаптер (Adapter). Реалізує
+    IGameObserver і транслює виклики on_*(...) у
+    Qt-сигнали (QString::fromStdString(...)),
+    а Qt-слоти - у виклики методів GameEngine.
+    Це єдине місце, де "core" зустрічається з Qt.
+  end note
+
+  class "MainWindow\n<<QMainWindow>>" as MainWindow {
+    - ui: Ui::MainWindow*
+    - controller: GameController*
+    + updateUI()
+  }
+}
+
+Character <|-- Player
+Character <|-- Enemy
+Player <|-- Warrior
+Player <|-- Mage
+Player <|-- Archer
+Enemy <|-- Goblin
+Enemy <|-- Orc
+Enemy <|-- Wraith
+Item <|-- Weapon
+Item <|-- Armor
+Item <|-- Potion
+
+Character ..> DamageType
+Archer o-right-> IRandomProvider : rng_
+EnemyFactory o-right-> IRandomProvider : rng_
+ItemFactory o-right-> IRandomProvider : rng_
+GameMap o-right-> IRandomProvider : rng_
+GameMap o-- IEnemyFactory
+GameMap o-- IItemFactory
+GameMap *-- "1" Graph
+GameMap *-- "1..*" MapNode
+MapNode o--> "0..1" Enemy
+MapNode o--> "0..1" Item
+
+GameEngine *-- "1" RandomProvider
+GameEngine *-- "1" EnemyFactory
+GameEngine *-- "1" ItemFactory
+GameEngine *-- "0..1" GameMap
+GameEngine *-- "0..1" Player
+GameEngine -right-> IGameObserver : observer_\n(сповіщає про події)
+
+GameController .up.|> IGameObserver : реалізує
+GameController *-- "1" GameEngine
+MainWindow *-- "1" GameController
+
+@enduml

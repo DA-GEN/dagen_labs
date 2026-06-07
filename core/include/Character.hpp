@@ -4,6 +4,15 @@
 #include <string>
 #include <algorithm> // для std::max
 
+// Тип шкоди визначає, чи застосовується звичайний захист персонажа.
+// Фізична шкода проходить крізь броню (Character::defense_), магічна - ігнорує її.
+// Введення цього типу дозволяє Mage коректно завдавати шкоду через єдиний
+// поліморфний інтерфейс take_damage замість прямого виклику set_hp.
+enum class DamageType {
+    Physical,
+    Magical
+};
+
 class Character {
 protected:
     std::string name_;
@@ -11,6 +20,24 @@ protected:
     int max_hp_;
     int attack_power_;
     int defense_;
+
+    // Шаблонний метод (Template Method): обчислює, скільки шкоди фактично
+    // дійде до персонажа з урахуванням його захисту/резистів.
+    // Базова реалізація враховує лише стандартний захист і лише для
+    // фізичної шкоди; підкласи (напр. Wraith) можуть перевизначити цей хук,
+    // додаючи власні модифікатори (резист, вразливість тощо), не дублюючи
+    // при цьому решту логіки take_damage.
+    virtual int apply_defense(int amount, DamageType type) const {
+        if (type == DamageType::Magical) {
+            return amount; // магія ігнорує фізичний захист
+        }
+
+        int actual_damage = amount - defense_;
+        if (actual_damage < 1) {
+            actual_damage = 1;
+        }
+        return actual_damage;
+    }
 
 public:
     Character(const std::string& name, int max_hp, int attack_power, int defense)
@@ -24,14 +51,10 @@ public:
     virtual std::string attack(Character& target) = 0;
 
     // ЗМІНА: Повертає лог отримання пошкоджень
-    virtual std::string take_damage(int amount) {
+    virtual std::string take_damage(int amount, DamageType type = DamageType::Physical) {
         if (amount <= 0) return name_ + " не отримує пошкоджень.";
 
-        // Захист зменшує шкоду, але мінімум 1 од. проходить
-        int actual_damage = amount - defense_;
-        if (actual_damage < 1) {
-            actual_damage = 1;
-        }
+        int actual_damage = apply_defense(amount, type);
 
         hp_ -= actual_damage;
         if (hp_ < 0) {

@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+title Діаграма прецедентів "Як є" (As-Is) - Dungeon Game
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Гравець" as Player
+
+rectangle "Dungeon Game (Qt-застосунок)" {
+  usecase "Розпочати нову гру\n(ввести ім'я, обрати клас)" as UC1
+  usecase "Досліджувати підземелля\n(переходити між кімнатами)" as UC2
+  usecase "Атакувати ворога" as UC3
+  usecase "Підібрати предмет" as UC4
+  usecase "Переглянути інвентар\nта характеристики" as UC5
+  usecase "Вийти з підземелля\n(через фінальну кімнату)" as UC6
+  usecase "Переглянути журнал подій" as UC7
+  usecase "Почати гру заново\nпісля перемоги/поразки" as UC8
+
+  UC1 .> UC2 : <<include>>
+  UC3 .> UC7 : <<include>>
+  UC2 .> UC7 : <<include>>
+  UC6 .> UC8 : <<extend>>
+  UC3 .> UC8 : <<extend>>
+}
+
+Player --> UC1
+Player --> UC2
+Player --> UC3
+Player --> UC4
+Player --> UC5
+Player --> UC6
+Player --> UC7
+Player --> UC8
+
+note right of UC1
+  Усі прецеденти реалізовані через
+  методи/сигнали єдиного класу Game,
+  з яким MainWindow взаємодіє напряму.
+end note
+
+@enduml

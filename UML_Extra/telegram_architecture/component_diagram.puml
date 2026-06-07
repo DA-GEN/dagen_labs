@@ -1,0 +1,63 @@
+@startuml
+!pragma layout smetana
+title Концептуальна діаграма компонентів - месенджер "Telegram-подібний застосунок"
+
+skinparam componentStyle rectangle
+
+actor "Користувач" as User
+
+package "Клієнтський застосунок" as ClientPkg #E3F2FD {
+  component "UI шар\n(чати, профіль, налаштування)" as UI
+  component "Локальний кеш / БД\n(повідомлення, медіа, контакти)" as LocalCache
+  component "Менеджер сесії\n(авторизація, токени)" as SessionMgr
+  component "Клієнт протоколу\n(MTProto-подібний)" as ClientProto
+  component "Модуль шифрування\n(секретні чати, E2E)" as ClientCrypto
+}
+
+package "Серверна інфраструктура" as ServerPkg #E8F5E9 {
+  component "Шлюз API /\nБалансувальник навантаження" as Gateway
+  component "Сервіс автентифікації\n(номер телефону, код, сесії)" as AuthService
+  component "Сервіс чатів і повідомлень\n(маршрутизація, історія)" as ChatService
+  component "Сервіс сповіщень\n(push-повідомлення)" as NotifyService
+  component "Сервіс синхронізації\n(мульти-пристрої, статус\n«прочитано»/«доставлено»)" as SyncService
+  component "Сховище медіа\n(фото, відео, файли, CDN)" as MediaStorage
+  database "База даних\n(користувачі, чати, метадані)" as DB
+}
+
+User --> UI : взаємодіє
+
+UI --> LocalCache : читає/пише\nкешовані дані
+UI --> SessionMgr : ініціює\nавторизацію
+UI --> ClientProto : надсилає/отримує\nповідомлення
+
+ClientProto --> ClientCrypto : шифрує/дешифрує\n(для секретних чатів)
+ClientProto --> Gateway : захищене\nз'єднання (TCP/TLS)
+
+Gateway --> AuthService : перевірка сесії
+Gateway --> ChatService : маршрутизація\nповідомлень
+Gateway --> SyncService : запит синхронізації
+
+AuthService --> DB : зберігає/читає\nоблікові дані
+ChatService --> DB : зберігає історію\nта метадані чатів
+ChatService --> MediaStorage : завантаження/\nотримання медіа
+ChatService --> NotifyService : тригерить push\nпри новому повідомленні
+SyncService --> DB : відстежує стан\n(прочитано/доставлено)
+NotifyService --> UI : push-сповіщення\n(коли застосунок\nне активний)
+
+note bottom of ClientPkg
+  <b>Ключова ідея архітектури:</b> клієнт ніколи не звертається
+  до бази даних напряму - лише через єдину захищену точку входу
+  (Gateway) і узгоджений протокол. Це дозволяє розгортати,
+  масштабувати й змінювати серверну частину незалежно від
+  клієнтських застосунків (мобільних, десктопних, веб).
+end note
+
+note bottom of ServerPkg
+  <b>Масштабованість:</b> кожен сервіс (чати, сповіщення,
+  синхронізація, медіа) - окремий, незалежно масштабований
+  компонент. Це дозволяє, наприклад, додати нову платформу
+  сповіщень або замінити сховище медіа без впливу на інші
+  частини системи (принцип, аналогічний OCP на рівні системи).
+end note
+
+@enduml

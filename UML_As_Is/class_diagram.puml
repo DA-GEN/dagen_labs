@@ -1,0 +1,133 @@
+@startuml
+!pragma layout smetana
+title Діаграма класів "Як є" (As-Is) - Dungeon Game (Qt-версія)
+skinparam classAttributeIconSize 0
+left to right direction
+
+abstract class Character {
+  # name_: string
+  # hp_, max_hp_: int
+  # attack_power_, defense_: int
+  + {abstract} attack(target: Character&): string
+  + take_damage(amount: int): string
+  + heal(amount: int): string
+  + is_alive(): bool
+  + get_stats_string(): string
+}
+
+class Player {
+  # inventory_: vector<Item*>
+  + add_item(item: Item*)
+  + get_inventory_list(): vector<string>
+}
+class Warrior
+class Mage
+class Archer {
+  - random_initialized_: bool {static}
+  - crit_chance_: int
+}
+
+class Enemy
+class Goblin
+class Orc
+class Wraith {
+  - physical_resistance_: double
+  + take_damage(amount:int): string
+}
+
+abstract class Item {
+  # name_, description_: string
+  + {abstract} use(character: Character*): string
+}
+class Weapon
+class Armor
+class Potion
+
+class MapNode {
+  - id_: int
+  - description_: string
+  - enemy_: Enemy*
+  - item_: Item*
+}
+
+class "Graph<T>" as Graph {
+  - adjacency_list: unordered_map<T, unordered_set<T>>
+  + add_node(data: T)
+  + add_undirected_edge(a: T, b: T)
+  + bfs(start: T, end: T): vector<T>
+  + dfs(start: T, end: T): vector<T>
+}
+
+class GameMap {
+  - graph_: Graph<MapNode*>
+  - nodes_: vector<unique_ptr<MapNode>>
+  - enemies_: vector<unique_ptr<Enemy>>
+  - items_: vector<unique_ptr<Item>>
+  - create_random_enemy(): unique_ptr<Enemy>
+  - create_random_item(): unique_ptr<Item>
+  + generate_map(rooms,enemies,items: int)
+}
+note right of GameMap
+  <b>Проблема (OCP):</b> карта сама "знає" про
+  конкретні класи Goblin/Orc/Wraith/Weapon/...
+  Додавання нового типу = правка GameMap.
+  <b>Проблема (DRY):</b> власна ініціалізація
+  std::rand, що дублюється в Archer.
+end note
+
+class Game <<QObject>> #FFD9D9 {
+  - dungeon_: unique_ptr<GameMap>
+  - player_: unique_ptr<Player>
+  + startNewGame(name: QString, classChoice: int)
+  + actionAttack()
+  + actionMove(exitIndex: int)
+  .. signals ..
+  + logMessage(QString)
+  + statsUpdated()
+  + roomUpdated(QString,bool,bool)
+  + gameOver(bool)
+}
+note right of Game
+  <b>Проблема (SRP/DIP):</b> один клас одночасно:
+  - зберігає й виконує ВСЮ ігрову логіку,
+  - генерує підземелля,
+  - є QObject і "знає" про сигнали/слоти Qt.
+  Через це логіку неможливо використати чи
+  протестувати без QApplication.
+end note
+
+class MainWindow <<QMainWindow>> #FFD9D9 {
+  - ui: Ui::MainWindow*
+  - game: Game*
+  + updateUI()
+}
+
+Character <|-- Player
+Character <|-- Enemy
+Player <|-- Warrior
+Player <|-- Mage
+Player <|-- Archer
+Enemy <|-- Goblin
+Enemy <|-- Orc
+Enemy <|-- Wraith
+
+Item <|-- Weapon
+Item <|-- Armor
+Item <|-- Potion
+
+Player o-- "0..*" Item : inventory_
+MapNode o--> "0..1" Enemy
+MapNode o--> "0..1" Item
+
+GameMap *-- "1" Graph
+GameMap *-- "1..*" MapNode
+GameMap *-- "0..*" Enemy : creates >
+GameMap *-- "0..*" Item : creates >
+
+Game *-- "1" GameMap
+Game *-- "1" Player
+Game ..> Enemy
+MainWindow *-- "1" Game
+MainWindow ..> MainWindow : updateUI()
+
+@enduml

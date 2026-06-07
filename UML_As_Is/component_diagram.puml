@@ -1,0 +1,37 @@
+@startuml
+!pragma layout smetana
+title Діаграма компонентів "Як є" (As-Is) - Dungeon Game
+
+skinparam componentStyle rectangle
+
+package "Qt Widgets (зовнішня бібліотека)" as QtPkg #EFEFEF {
+  [QApplication]
+  [QMainWindow]
+  [QObject / Signals & Slots]
+}
+
+package "dungeonqt (єдиний застосунок)" as App #FFD9D9 {
+  component "main.cpp" as Main
+  component "MainWindow\n(UI + рендер стану)" as MW
+  component "Game\n<<QObject>>\n(ігрова логіка + Qt-сигнали)" as Game
+  component "GameMap / Graph<T> /\nMapNode / Character / Item\n(доменні моделі)" as Domain
+}
+
+Main --> QtPkg
+Main --> MW
+
+MW -down-> QtPkg : успадковує QMainWindow,\nвикористовує віджети
+MW -right-> Game : напряму викликає\nслоти, підписується\nна сигнали
+
+Game -down-> QtPkg : успадковує QObject,\nвипромінює сигнали (emit)
+Game --> Domain : створює й керує\nGameMap, Player, Enemy...
+
+note bottom of App
+  <b>Проблема:</b> ігрова логіка (Game + Domain) фізично
+  й логічно "вшита" в один виконуваний застосунок разом
+  з шаром Qt UI. Немає межі (інтерфейсу), яка дозволила б:
+  - підключити інший UI (консоль, веб, інша GUI-бібліотека);
+  - зібрати/протестувати логіку окремо без залежності від Qt.
+end note
+
+@enduml

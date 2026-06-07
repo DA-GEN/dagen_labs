@@ -1,0 +1,61 @@
+@startuml
+!pragma layout smetana
+title Діаграма компонентів "Як буде" (To-Be) - чітке розділення core / ui
+
+skinparam componentStyle rectangle
+
+package "Qt Widgets (зовнішня бібліотека)" as QtPkg #EFEFEF {
+  [QApplication]
+  [QMainWindow]
+  [QObject / Signals & Slots]
+}
+
+package "core - Qt-незалежна бібліотека (dungeon_core)" as Core #E8F5E9 {
+  component "GameEngine\n(ігрова логіка)" as GE
+  component "GameMap / Graph<T> / MapNode\nCharacter / Item / ... \n(доменні моделі)" as Domain
+  component "EnemyFactory / ItemFactory\n(IEnemyFactory / IItemFactory)" as Factories
+  component "RandomProvider\n(IRandomProvider)" as RNG
+  interface "IGameObserver" as IObs
+}
+
+package "ui - тонкий адаптер Qt (dungeonqt)" as UI #E3F2FD {
+  component "GameController\n<<QObject>>\n(реалізує IGameObserver)" as GC
+  component "MainWindow\n(рендер стану, обробка кліків)" as MW
+  component "main.cpp" as Main
+}
+
+package "tests - GoogleTest (dungeon_core_tests)" as Tests #FCE4EC {
+  component "SpyGameObserver / \nSequenceRandomProvider\n(тестові двійники)" as Spies
+  component "Юніт-тести GameEngine,\nCharacter, GameMap, фабрик ..." as UnitTests
+}
+
+GE -down-> IObs : сповіщає через\nабстракцію (DIP)
+GE --> Domain
+GE --> Factories
+GE --> RNG
+Factories --> RNG
+
+GC .up.|> IObs : реалізує
+GC --> GE : тримає й викликає\nстарт/дії
+GC -down-> QtPkg : успадковує QObject,\nемітує Qt-сигнали
+
+MW --> GC : виклик слотів,\nпідписка на сигнали
+MW -down-> QtPkg : успадковує QMainWindow
+
+Main --> QtPkg
+Main --> MW
+
+Spies .up.|> IObs : реалізує (тестовий двійник)
+UnitTests --> GE
+UnitTests --> Spies
+UnitTests --> Core
+
+note bottom of Core
+  <b>Результат поділу (SRP + DIP):</b> "core" не залежить
+  від Qt і тестів - залежність спрямована "досередини"
+  через інтерфейс IGameObserver. "ui" і "tests" залежать
+  від "core", а не навпаки. "core" можна збирати, запускати
+  й переносити в інший застосунок без жодних правок.
+end note
+
+@enduml
