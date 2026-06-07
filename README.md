@@ -26,6 +26,10 @@
   в чаті") та діаграма активностей за сюжетом фільму "Назад у
   майбутнє".
 - [`Glossary.md`](Glossary.md) - глосарій термінів предметної області.
+- [`UML_Tool_Review.md`](UML_Tool_Review.md) - враження від
+  інструменту моделювання UML (PlantUML): чому обрано, плюси,
+  мінуси, порівняння з графічними редакторами (StarUML,
+  Enterprise Architect).
 - [`Report_Analysis.md`](Report_Analysis.md) - звіт з аналізу
   архітектури, опис застосованих патернів проєктування (SOLID, Observer,
   Factory Method, Template Method, Dependency Injection, Adapter) і
